@@ -1,9 +1,55 @@
-﻿// Custom multi-cell selection directive for UI-Grid
+﻿/* globals $, angular */
+
+// Custom multi-cell selection directive for UI-Grid
+
 // Created by brendenjpeterson@gmail.com
 
 /**
+ * @typedef {Object} SelectionApi
+ * @property {Function} getSelection
+ * @property {Function} setSelection
+ */
+
+/**
+ * @typedef {Object} GridApiCoreEvents
+ * @property {Function} scrollBegin
+ * @property {Function} scrollEnd
+ * @property {Function} filterChanged
+ * @property {Function} columnVisibilityChanged
+ * @property {Function} rowsVisibleChanged
+ * @property {Function} sortChanged
+ */
+
+/**
+ * @typedef {Object} GridApiCore
+ * @property {GridApiCoreEvents} on
+ *
+ */
+
+/**
+ * @typedef {GridApi} UIGridApi
+ * @property {GridApiCore} core
+ */
+/**
+ * @class UIGrid
+ * @property {Number} id
+ * @property {UIGridApi} api
+ * @property {Element} element
+ * @property {Array} columns
+ * @property {Object} renderContainers
+ * @property {Function} getVisibleRows
+ * @property {Function} getCellDisplayValue
+ */
+
+/**
+ * @callback RegisterApiCallback
+ * @param {SelectionApi} api
+ */
+
+/**
  * @typedef {Object} SelectionOptions
- * @property {Boolean} ignoreRightClick=false Set to true to ignore right click events
+ * @property {boolean} ignoreRightClick=false Set to true to ignore right click events
+ * @property {RegisterApiCallback} [onRegisterApi=null]
  */
 
 angular.module('ui.grid')
@@ -21,7 +67,8 @@ angular.module('ui.grid')
      * @type {SelectionOptions}
      */
     var defaultOptions = {
-        ignoreRightClick: false
+        ignoreRightClick: false,
+        onRegisterApi: null
     };
 
     return {
@@ -34,12 +81,16 @@ angular.module('ui.grid')
                 pre: function ($scope, $elm, $attrs, uiGridCtrl) { },
                 post: function ($scope, $elm, $attrs, uiGridCtrl) {
                     var _scope = $scope;
+
+                    /**
+                     * @type {UIGrid}
+                     */
                     var grid = uiGridCtrl.grid;
 
-                  /**
-                   * @type {SelectionOptions}
-                   */
-                  var selectionOptions = angular.extend({}, defaultOptions, $scope.$eval( $attrs.uiGridCustomCellSelect ));
+                    /**
+                     * @type {SelectionOptions}
+                     */
+                    var selectionOptions = angular.extend({}, defaultOptions, $scope.$eval( $attrs.uiGridCustomCellSelect ));
 
                     // Data setup
                     _scope.ugCustomSelect = {
@@ -58,7 +109,7 @@ angular.module('ui.grid')
                                 col: null
                             }
                         }
-                    }
+                    };
 
                     // Bind events
                     $timeout(function () {
@@ -77,6 +128,35 @@ angular.module('ui.grid')
 
                         _scope.ugCustomSelect.hiddenInput.on('paste', pasteCellData);
                     });
+
+                    if( selectionOptions.onRegisterApi !== null ){
+                      selectionOptions.onRegisterApi({
+
+                        getCopyData: function(){
+                            return _scope.ugCustomSelect.copyData;
+                        },
+
+                        getSelection: function(){
+                          return {
+                              start: {
+                                  row: _scope.ugCustomSelect.dragData.startCell.row,
+                                  col: _scope.ugCustomSelect.dragData.startCell.col
+                              },
+                              end: {
+                                  row: _scope.ugCustomSelect.dragData.endCell.row,
+                                  col: _scope.ugCustomSelect.dragData.endCell.col
+                              }
+                          };
+                        },
+
+                        setSelection: function(sRow, sCol, eRow, eCol){
+                          clearDragData();
+                          setStartCell(sRow, sCol);
+                          setEndCell(eRow, eCol);
+                          setSelectedStates();
+                        }
+                      });
+                    }
 
                     // Events
                     function dragStart(evt) {
@@ -271,7 +351,7 @@ angular.module('ui.grid')
                         var rowStart = grid.renderContainers.body.renderedRows.indexOf(_scope.ugCustomSelect.dragData.startCell.row),
                             rowEnd = grid.renderContainers.body.renderedRows.indexOf(_scope.ugCustomSelect.dragData.endCell.row),
                             colStart = grid.renderContainers.body.renderedColumns.indexOf(_scope.ugCustomSelect.dragData.startCell.col),
-                            colEnd = grid.renderContainers.body.renderedColumns.indexOf(_scope.ugCustomSelect.dragData.endCell.col)
+                            colEnd = grid.renderContainers.body.renderedColumns.indexOf(_scope.ugCustomSelect.dragData.endCell.col);
 
                         if (rowEnd === -1)
                             rowEnd = rowStart;
@@ -323,7 +403,7 @@ angular.module('ui.grid')
                     }
 
                     function getCellElem(col, rowIndex) {
-                        return (col && col.uid && typeof rowIndex == 'number') ? angular.element('#' + grid.id + '-' + rowIndex + '-' + col.uid + '-cell') : null;
+                        return (col && col.uid && typeof rowIndex === 'number') ? angular.element('#' + grid.id + '-' + rowIndex + '-' + col.uid + '-cell') : null;
                     }
 
                     function createCopyData(cells, numCols) {
