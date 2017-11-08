@@ -33,5 +33,9 @@
   "bugs": {
     "url": "https://github.com/Atmos206/ui-grid-custom-cell-select/issues"
   },
-  "homepage": "https://github.com/Atmos206/ui-grid-custom-cell-select#readme"
+  "homepage": "https://github.com/Atmos206/ui-grid-custom-cell-select#readme",
+  "devDependencies": {
+    "angular": "^1.5",
+    "angular-ui-grid": "^4.0.8"
+  }
 }
