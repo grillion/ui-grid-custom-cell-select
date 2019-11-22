@@ -67,6 +67,7 @@ angular.module('ui.grid')
      * @type {SelectionOptions}
      */
     var defaultOptions = {
+        deselectOnOuterClick: true,
         ignoreRightClick: false,
         onRegisterApi: null
     };
@@ -185,6 +186,9 @@ angular.module('ui.grid')
                         if (_scope.ugCustomSelect.isDragging) {
                             _scope.ugCustomSelect.isDragging = false;
                             setSelectedStates();
+                        }
+                        else if ( selectionOptions.deselectOnOuterClick ){
+                          clearDragData();
                         }
                     }
 
