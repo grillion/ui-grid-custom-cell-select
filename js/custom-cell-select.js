@@ -67,6 +67,7 @@ angular.module('ui.grid')
      * @type {SelectionOptions}
      */
     var defaultOptions = {
+        deselectOnOuterClick: true,
         ignoreRightClick: false,
         onRegisterApi: null
     };
@@ -186,21 +187,27 @@ angular.module('ui.grid')
                             _scope.ugCustomSelect.isDragging = false;
                             setSelectedStates();
                         }
+                        else if ( selectionOptions.deselectOnOuterClick ){
+                          clearDragData();
+                        }
                     }
 
                     function documentKeyUp(evt) {
-                        var cKey = 67, vKey = 86;
+                        // if keys are pressed outside of ui-grid contents, ~let it go~
+                        if (angular.element(evt.target).hasClass('ui-grid-cell-contents')) {
+                            var cKey = 67, vKey = 86;
 
-                        // When ctrl+C or cmd+C
-                        if (evt.keyCode === cKey && (evt.ctrlKey || evt.metaKey) && window.getSelection() + '' === '') {
-                            _scope.ugCustomSelect.hiddenInput.val(' ').focus().select();
-                            document.execCommand('copy');
-                            evt.preventDefault();
-                        }
+                            // When ctrl+C or cmd+C
+                            if (evt.keyCode === cKey && (evt.ctrlKey || evt.metaKey) && window.getSelection() + '' === '') {
+                                _scope.ugCustomSelect.hiddenInput.val(' ').focus().select();
+                                document.execCommand('copy');
+                                evt.preventDefault();
+                            }
 
-                        // When ctrl+V or cmd+V
-                        if (evt.keyCode === vKey && (evt.ctrlKey || evt.metaKey) && window.getSelection() + '' === '') {
-                            _scope.ugCustomSelect.hiddenInput.val('').focus();
+                            // When ctrl+V or cmd+V
+                            if (evt.keyCode === vKey && (evt.ctrlKey || evt.metaKey) && window.getSelection() + '' === '') {
+                                _scope.ugCustomSelect.hiddenInput.val('').focus();
+                            }
                         }
                     }
 
